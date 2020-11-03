@@ -9,6 +9,7 @@ with open('./config.yaml', 'r') as fd:
     opts = yaml.safe_load(fd)
 
 sys.path.insert(0, './white_box_cartoonizer/')
+sys.path.insert(0, './pytorch-CycleGAN-and-pix2pix/')
 
 import cv2
 from flask import Flask, render_template, make_response, flash
@@ -21,6 +22,9 @@ if opts['colab-mode']:
 
 
 from cartoonize import WB_Cartoonize
+from options.web_options import WebOptions
+from data import create_dataset
+from models import create_model
 
 if not opts['run_local']:
     if 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
@@ -170,9 +174,22 @@ def cartoonize():
     else:
         return render_template("index_cartoonized.html")
 
+@app.route('/artwork', methods=["POST", "GET"])
+def cycle_gan():
+    opt = WebOptions().parse()  # get test options
+    opt.num_threads = 0   # test code only supports num_threads = 0
+    opt.batch_size = 1    # test code only supports batch_size = 1
+    opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
+    opt.no_flip = True    # no flip; comment this line if results on flipped images are needed.
+    opt.display_id = -1   # no visdom display; the test code saves the results to a HTML file.
+    dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
+    model = create_model(opt)      # create a model given opt.model and other options
+    model.setup(opt)       
+    return 'artwork'
+
 if __name__ == "__main__":
     # Commemnt the below line to run the Appication on Google Colab using ngrok
-    if opts['colab-mode']:
+    if opts['colab-mode'] or opts['run_local']:
         app.run()
     else:
         app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))

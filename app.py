@@ -12,8 +12,9 @@ sys.path.insert(0, './white_box_cartoonizer/')
 sys.path.insert(0, './pytorch-CycleGAN-and-pix2pix/')
 
 import cv2
-from flask import Flask, render_template, make_response, flash
+from flask import Flask, render_template, make_response, flash, request, redirect
 import flask
+from werkzeug.utils import secure_filename
 from PIL import Image
 import numpy as np
 import skvideo.io
@@ -36,11 +37,18 @@ if not opts['run_local']:
     import Algorithmia
 
 app = Flask(__name__)
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b'\x02h\xab\xa5.Y)\x1c6\xe9k\x03\xba\xa0\xcb+'
 if opts['colab-mode']:
     run_with_ngrok(app)   #starts ngrok when the app is run
 
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
 app.config['UPLOAD_FOLDER_VIDEOS'] = 'static/uploaded_videos'
 app.config['CARTOONIZED_FOLDER'] = 'static/cartoonized_images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ALLOWED_EXTENSIONS'] = ALLOWED_EXTENSIONS
 
 app.config['OPTS'] = opts
 
@@ -174,18 +182,43 @@ def cartoonize():
     else:
         return render_template("index_cartoonized.html")
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/artwork', methods=["POST", "GET"])
 def cycle_gan():
-    opt = WebOptions().parse()  # get test options
-    opt.num_threads = 0   # test code only supports num_threads = 0
-    opt.batch_size = 1    # test code only supports batch_size = 1
-    opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
-    opt.no_flip = True    # no flip; comment this line if results on flipped images are needed.
-    opt.display_id = -1   # no visdom display; the test code saves the results to a HTML file.
-    dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
-    model = create_model(opt)      # create a model given opt.model and other options
-    model.setup(opt)       
-    return 'artwork'
+    if request.method == 'POST':
+        if 'image' not in request.files:
+            flash('No file part')
+            print('No file part')
+            return redirect(request.url)
+            print("======POST=======")
+        file = request.files['image']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            print('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            cartoonized_img_name = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(cartoonized_img_name)
+            # opt = WebOptions().parse()  # get test options
+            # opt.num_threads = 0   # test code only supports num_threads = 0
+            # opt.batch_size = 1    # test code only supports batch_size = 1
+            # opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
+            # opt.no_flip = True    # no flip; comment this line if results on flipped images are needed.
+            # opt.display_id = -1   # no visdom display; the test code saves the results to a HTML file.
+            # dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
+            # model = create_model(opt)      # create a model given opt.model and other options
+            # model.setup(opt)
+            return render_template("index_cycle_cartoon.html", cartoonized_image=cartoonized_img_name)       
+        # return 'artwork'
+    else:
+        print("======GET=======")
+        return render_template("index_cycle_cartoon.html")
 
 if __name__ == "__main__":
     # Commemnt the below line to run the Appication on Google Colab using ngrok

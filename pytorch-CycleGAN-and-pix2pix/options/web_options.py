@@ -21,11 +21,10 @@ class WebOptions(BaseOptions):
         parser.set_defaults(load_size=parser.get_default('crop_size'))
 
         self._modify_required(parser, 'dataroot', False)
-        parser.set_defaults(dataroot="datasets/artwork-new/testA")
+        parser.set_defaults(dataroot='static/uploads')
         parser.set_defaults(gpu_ids='-1')
+        parser.set_defaults(name='artwork')
         self.isTrain = False
-        
-        # self.dataroot = "datasets/artwork-new/testA"
         return parser
 
     def _modify_required(self, parser, dest, required):

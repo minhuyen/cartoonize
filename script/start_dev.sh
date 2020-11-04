@@ -1,4 +1,4 @@
 #!/bin/bash
-workon cartoonize
+# workon cartoonize
 export FLASK_ENV=development
 python app.py

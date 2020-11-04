@@ -3,5 +3,6 @@ __pycache__/
 static/uploaded_videos/*.mp4
 static/cartoonized_images/*.jpg
 static/uploads/*
+static/results/
 results/
 checkpoints/

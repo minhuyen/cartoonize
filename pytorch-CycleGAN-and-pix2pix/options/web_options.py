@@ -9,12 +9,17 @@ class WebOptions(BaseOptions):
 
     def initialize(self, parser):
         parser = BaseOptions.initialize(self, parser)  # define shared options
-        parser.add_argument('--results_dir', type=str, default='./results/', help='saves results here.')
-        parser.add_argument('--aspect_ratio', type=float, default=1.0, help='aspect ratio of result images')
-        parser.add_argument('--phase', type=str, default='test', help='train, val, test, etc')
+        parser.add_argument('--results_dir', type=str,
+                            default='./results/', help='saves results here.')
+        parser.add_argument('--aspect_ratio', type=float,
+                            default=1.0, help='aspect ratio of result images')
+        parser.add_argument('--phase', type=str,
+                            default='test', help='train, val, test, etc')
         # Dropout and Batchnorm has different behavior during training and test.
-        parser.add_argument('--eval', action='store_true', help='use eval mode during test time.')
-        parser.add_argument('--num_test', type=int, default=50, help='how many test images to run')
+        parser.add_argument('--eval', action='store_true',
+                            help='use eval mode during test time.')
+        parser.add_argument('--num_test', type=int, default=50,
+                            help='how many test images to run')
         # rewrite devalue values
         parser.set_defaults(model='test')
         # To avoid cropping, the load_size should be the same as crop_size
@@ -22,6 +27,7 @@ class WebOptions(BaseOptions):
 
         self._modify_required(parser, 'dataroot', False)
         parser.set_defaults(dataroot='static/uploads')
+        parser.set_defaults(results_dir='static/results')
         parser.set_defaults(gpu_ids='-1')
         parser.set_defaults(name='artwork')
         self.isTrain = False

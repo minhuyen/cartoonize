@@ -16,6 +16,7 @@ from flask import Flask, render_template, make_response, flash, request, redirec
 import flask
 from werkzeug.utils import secure_filename
 from PIL import Image
+from rembg.bg import remove
 import numpy as np
 import skvideo.io
 if opts['colab-mode']:
@@ -218,6 +219,7 @@ def cycle_gan():
             flash('No file part')
             return redirect(request.url)
         file = request.files['image']
+
         # if user does not select file, browser also
         # submit an empty part without filename
         if file.filename == '':
@@ -232,7 +234,10 @@ def cycle_gan():
             if not os.path.exists(folder):
                 os.makedirs(folder)
             cartoonized_img_name = os.path.join(folder, filename)
-            file.save(cartoonized_img_name)
+            file = io.BytesIO(remove(file.read()))
+            with open(cartoonized_img_name, 'wb') as outfile:
+                outfile.write(file.getbuffer())
+            # file.save(cartoonized_img_name)
             opt = WebOptions().parse()  # get test options
             opt.num_threads = 0   # test code only supports num_threads = 0
             opt.batch_size = 1    # test code only supports batch_size = 1
@@ -244,8 +249,8 @@ def cycle_gan():
             opt.display_id = -1
             opt.no_dropout = True
             opt.dataroot = folder
-            # opt.load_size = 1024
-            # opt.preprocess = 'scale_width'
+            opt.load_size = 1024  # 1024
+            opt.preprocess = 'scale_width'
             # create a dataset given opt.dataset_mode and other options
             dataset = create_dataset(opt)
             # create a model given opt.model and other options

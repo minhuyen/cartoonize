@@ -84,7 +84,6 @@ def convert_bytes_to_image(img_bytes):
     return image
 
 
-@app.route('/')
 @app.route('/cartoonize', methods=["POST", "GET"])
 def cartoonize():
     opts = app.config['OPTS']
@@ -212,6 +211,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+@app.route('/')
 @app.route('/artwork', methods=["POST", "GET"])
 def cycle_gan():
     if request.method == 'POST':
@@ -299,7 +299,7 @@ def cycle_gan():
 if __name__ == "__main__":
     # Commemnt the below line to run the Appication on Google Colab using ngrok
     if opts['colab-mode'] or opts['run_local']:
-        app.run(host='0.0.0.0')
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
     else:
         app.run(debug=False, host='0.0.0.0',
                 port=int(os.environ.get('PORT', 8080)))

@@ -299,7 +299,7 @@ def cycle_gan():
 if __name__ == "__main__":
     # Commemnt the below line to run the Appication on Google Colab using ngrok
     if opts['colab-mode'] or opts['run_local']:
-        app.run()
+        app.run(host='0.0.0.0')
     else:
         app.run(debug=False, host='0.0.0.0',
                 port=int(os.environ.get('PORT', 8080)))
